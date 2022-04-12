@@ -1,0 +1,9 @@
+fastapi
+python-jose
+passlib
+sqlalchemy
+pillow
+aiofiles
+bcrypt
+authlib
+itsdangerous
