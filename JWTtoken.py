@@ -20,9 +20,10 @@ def create_access_token(data:dict,expire_delta:Optional[timedelta]= None):
 def decode_access_token(token):
     try:
         payload = jwt.decode(token,SECRET_KEY,ALGORITHM)
-        user = payload.get("user")
+        user = payload.get("username")
         roles = payload.get("roles")
-        return {"user":user,"role":roles}
+        # return {"user":user,"role":roles}
+        return user
     except:
         raise HTTPException(
             status_code=401, detail="Invalid Authorization"

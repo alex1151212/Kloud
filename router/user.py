@@ -1,6 +1,7 @@
 from os import access
 import re
 from typing import List
+from webbrowser import get
 from fastapi import (
     APIRouter ,
     Depends,
@@ -9,8 +10,9 @@ from fastapi import (
     HTTPException,
     Request,
     Cookie
+    
 )
-from regex import F
+from starlette.responses import JSONResponse
 
 #Database 
 from database import get_db
@@ -23,6 +25,8 @@ import JWTtoken
 from hash import Hash
 from fastapi.security import OAuth2PasswordRequestForm
 from oauth import get_current_user
+from fastapi_mail import FastMail, MessageSchema,ConnectionConfig
+from emails import conf,EmailSchema
 
 UserApp = APIRouter(
     
@@ -43,7 +47,7 @@ async def login(response:Response,userInput=Depends(OAuth2PasswordRequestForm),d
             status_code= 401,
             detail = f"Invalid username or password!"
         )
-    roles = []
+    roles = user.roles
     for role in roles:
         roles.append(role.name)
     accessToken = JWTtoken.create_access_token(
@@ -186,4 +190,36 @@ async def addRoleToUser(roles:List[str],user=Depends(get_current_user),db:Sessio
     # U = db.query(models.User).filter(models.User.email==user).first()
     return "Role Add Success!"
     # return test
+
+
+@UserApp.post("/email",tags=["APIs"])
+async def EmailSend(request:Request,email: EmailSchema,Authorization:Optional[str]=Cookie(None)):
+
+    token = Authorization
+    content = f"""
+ Click the Link to Verify your account http://localhost:8000/verification/?token={token}
+"""
+
+    message = MessageSchema(
+        subject="Fastapi-Mail module",
+        recipients=email.dict().get("email"),  # List of recipients, as many as you can pass
+        body=content,
+        subtype="text"
+        )
+
+    fm = FastMail(conf)
+    await fm.send_message(message)
+    return JSONResponse(status_code=200, content={"message": "email has been sent"})
+
+@UserApp.get("/verification/",tags=["DevAPIs"])
+async def verification(request:Request,token:str,db:Session=Depends(get_db)):
     
+    username = JWTtoken.decode_access_token(token)
+
+    user = db.query(models.User).filter(models.User.email==username).first()
+    if not user:
+        raise HTTPException(404,detail=f"{username} if not found ")
+
+    user.is_verified = True
+    db.commit()
+    return "Verification succeeded"

@@ -7,3 +7,5 @@ aiofiles
 bcrypt
 authlib
 itsdangerous
+httpx
+uvicorn

@@ -1,5 +1,6 @@
 
-from sqlalchemy import Column,String,Integer,DateTime,func,ForeignKey,Table, null
+from email.policy import default
+from sqlalchemy import Column,String,Integer,DateTime,func,ForeignKey,Table, null,Boolean
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -30,6 +31,8 @@ class User(Base):
     school_id = Column(String(9),nullable=True,unique=True,comment="10XACX0XX")
     school_grade = Column(String(3),nullable=True,comment="互動X")
     profile_img = Column(String(100),nullable=True)
+    
+    is_verified = Column(Boolean,nullable=False,default=False)
 
     roles = relationship('Role',secondary=role_manager,back_populates='users')
     works = relationship('Work',back_populates='owner')
